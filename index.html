@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TransitOps — Smart Transport Operations Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-mark"><div class="dot"></div><span>TransitOps</span></div>
+      <div>
+        <h1>Every vehicle,<br>driver &amp; dispatch<br>in one board.</h1>
+        <p>Replace the spreadsheet logbook with live fleet status, compliance tracking and cost reporting — built for the depot floor.</p>
+      </div>
+      <div class="ticker">
+        <div class="ticker-row"><b>VAN-05</b><span>ON TRIP · Ahmedabad → Surat</span></div>
+        <div class="ticker-row"><b>TRK-11</b><span>IN SHOP · Brake service</span></div>
+        <div class="ticker-row"><b>DRV-ALEX</b><span>LICENSE OK · Score 92</span></div>
+      </div>
+    </div>
+    <div class="login-form">
+      <h2>Sign in to your depot</h2>
+      <p>Pick a role to preview role-based access, or use any email/password.</p>
+      <div class="field">
+        <label>Work email</label>
+        <input id="loginEmail" type="email" value="ops@transitops.io" placeholder="you@company.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input id="loginPass" type="password" value="••••••••" placeholder="Password">
+      </div>
+      <div class="field">
+        <label>Sign in as</label>
+        <div class="role-grid" id="roleGrid"></div>
+      </div>
+      <div class="form-err" id="loginErr">Enter an email and password to continue.</div>
+      <button class="btn-primary" onclick="App.login()">Sign in →</button>
+      <div class="login-hint">Demo environment — data lives in this browser session only.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="side-brand"><div class="dot"></div><span>TransitOps</span></div>
+    <div id="navContainer"></div>
+    <div class="side-foot">
+      <div class="user-chip">
+        <div class="avatar" id="userAvatar">U</div>
+        <div>
+          <div class="u-name" id="userName">—</div>
+          <div class="u-role" id="userRole">—</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="App.logout()">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main" id="mainContent">
+    <!-- DASHBOARD -->
+    <section class="section" id="sec-dashboard">
+      <div class="topbar">
+        <div>
+          <h1>Fleet Dashboard</h1>
+          <div class="sub">Live operational overview across your depot</div>
+        </div>
+        <div class="top-actions">
+          <button class="theme-toggle" onclick="App.toggleTheme()" id="themeBtn">🌙</button>
+          <button class="pill-btn accent" onclick="Nav.go('trips')">+ New Trip</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>Filters</h3><div class="sub">Narrow the fleet view by type, status or region</div></div>
+          <div class="filters">
+            <select id="fltType" onchange="Dash.render()"><option value="">All Types</option></select>
+            <select id="fltStatus" onchange="Dash.render()"><option value="">All Status</option></select>
+            <select id="fltRegion" onchange="Dash.render()"><option value="">All Regions</option></select>
+          </div>
+        </div>
+        <div class="kpi-row" id="kpiRow"></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head"><div><h3>Fleet Status Mix</h3><div class="sub">Vehicles by current status</div></div></div>
+          <div class="chart-wrap" id="chartFleetStatus"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h3>Trips (Last 7 entries)</h3><div class="sub">Lifecycle snapshot</div></div></div>
+          <div class="chart-wrap" id="chartTrips"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VEHICLES -->
+    <section class="section" id="sec-vehicles">
+      <div class="topbar">
+        <div><h1>Vehicle Registry</h1><div class="sub">Master list of fleet assets</div></div>
+        <div class="top-actions">
+          <button class="pill-btn" onclick="Vehicles.exportCSV()">⇩ Export CSV</button>
+          <button class="pill-btn accent" onclick="Vehicles.openForm()">+ Register Vehicle</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>All Vehicles</h3><div class="sub" id="vehCount"></div></div>
+          <div class="filters">
+            <input id="vehSearch" placeholder="Search reg. number or model…" oninput="Vehicles.render()">
+            <select id="vehStatusFilter" onchange="Vehicles.render()"><option value="">All Status</option><option>Available</option><option>On Trip</option><option>In Shop</option><option>Retired</option></select>
+          </div>
+        </div>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th>Reg. Number</th><th>Model</th><th>Type</th><th>Max Load</th><th>Odometer</th><th>Region</th><th>Status</th><th>Cost / km</th><th></th></tr></thead>
+          <tbody id="vehTableBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- DRIVERS -->
+    <section class="section" id="sec-drivers">
+      <div class="topbar">
+        <div><h1>Driver Management</h1><div class="sub">Profiles, licenses &amp; compliance</div></div>
+        <div class="top-actions"><button class="pill-btn accent" onclick="Drivers.openForm()">+ Add Driver</button></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>All Drivers</h3><div class="sub" id="drvCount"></div></div>
+          <div class="filters">
+            <input id="drvSearch" placeholder="Search name or license…" oninput="Drivers.render()">
+            <select id="drvStatusFilter" onchange="Drivers.render()"><option value="">All Status</option><option>Available</option><option>On Trip</option><option>Off Duty</option><option>Suspended</option></select>
+          </div>
+        </div>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th>Name</th><th>License #</th><th>Category</th><th>Expiry</th><th>Contact</th><th>Safety Score</th><th>Status</th><th></th></tr></thead>
+          <tbody id="drvTableBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- TRIPS -->
+    <section class="section" id="sec-trips">
+      <div class="topbar">
+        <div><h1>Trip Management</h1><div class="sub">Draft → Dispatched → Completed / Cancelled</div></div>
+        <div class="top-actions"><button class="pill-btn accent" onclick="Trips.openForm()">+ Create Trip</button></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>All Trips</h3><div class="sub" id="tripCount"></div></div>
+          <div class="filters"><select id="tripStatusFilter" onchange="Trips.render()"><option value="">All Status</option><option>Draft</option><option>Dispatched</option><option>Completed</option><option>Cancelled</option></select></div>
+        </div>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th>Trip</th><th>Route</th><th>Vehicle</th><th>Driver</th><th>Cargo</th><th>Distance</th><th>Lifecycle</th><th></th></tr></thead>
+          <tbody id="tripTableBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- MAINTENANCE -->
+    <section class="section" id="sec-maintenance">
+      <div class="topbar">
+        <div><h1>Maintenance</h1><div class="sub">Service records &amp; vehicle downtime</div></div>
+        <div class="top-actions"><button class="pill-btn accent" onclick="Maint.openForm()">+ New Record</button></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Maintenance Log</h3><div class="sub" id="maintCount"></div></div></div>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th>Vehicle</th><th>Type</th><th>Description</th><th>Cost</th><th>Opened</th><th>Status</th><th></th></tr></thead>
+          <tbody id="maintTableBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- FUEL & EXPENSES -->
+    <section class="section" id="sec-fuel">
+      <div class="topbar">
+        <div><h1>Fuel &amp; Expenses</h1><div class="sub">Consumption logs and operational spend</div></div>
+        <div class="top-actions">
+          <button class="pill-btn" onclick="Fuel.openExpenseForm()">+ Expense</button>
+          <button class="pill-btn accent" onclick="Fuel.openFuelForm()">+ Fuel Log</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="tabbar">
+          <button class="tab-btn active" id="tabFuel" onclick="Fuel.switchTab('fuel')">Fuel Logs</button>
+          <button class="tab-btn" id="tabExp" onclick="Fuel.switchTab('expense')">Other Expenses</button>
+        </div>
+        <div style="overflow-x:auto"><table>
+          <thead id="fuelHead"></thead>
+          <tbody id="fuelTableBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section class="section" id="sec-reports">
+      <div class="topbar">
+        <div><h1>Reports &amp; Analytics</h1><div class="sub">Per-vehicle efficiency, cost and ROI</div></div>
+        <div class="top-actions"><button class="pill-btn accent" onclick="Reports.exportCSV()">⇩ Export CSV</button></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Fleet Utilization</h3><div class="sub">Share of fleet currently on active trips</div></div></div>
+        <div class="stat-strip" id="reportStatStrip"></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head"><div><h3>Operational Cost by Vehicle</h3><div class="sub">Fuel + Maintenance</div></div></div>
+          <div class="chart-wrap" id="chartCost"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h3>Fuel Efficiency</h3><div class="sub">Distance / Fuel (km per L)</div></div></div>
+          <div class="chart-wrap" id="chartEff"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Vehicle ROI Table</h3><div class="sub">(Revenue − (Maintenance + Fuel)) / Acquisition Cost</div></div></div>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th>Vehicle</th><th>Revenue</th><th>Fuel Cost</th><th>Maint. Cost</th><th>Total Op. Cost</th><th>Acquisition</th><th>ROI</th><th>Fuel Eff.</th></tr></thead>
+          <tbody id="reportTableBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- MODAL HOST -->
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="modalHost"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
